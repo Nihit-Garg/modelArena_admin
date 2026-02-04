@@ -1,0 +1,50 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model User {
+  email        String   @id @unique
+  name         String?
+  regNo        String?
+  hasTeam      Boolean  @default(false)
+  isTeamLeader Boolean  @default(false)
+  createdAt    DateTime @default(now())
+
+  teamsLed Team[] @relation("TeamLeader")
+}
+
+model Team {
+  id           String   @id @default(uuid())
+  name         String
+  teamCode     String   @unique
+  currentScore Float    @default(0.0)
+  
+  leaderEmail  String
+  leader       User     @relation("TeamLeader", fields: [leaderEmail], references: [email])
+
+  teamMembers  String[] 
+
+  createdAt    DateTime @default(now())
+  
+  submissions  Submission[]
+}
+
+model Submission {
+  id              String   @id @default(uuid())
+  
+  teamId          String
+  team            Team     @relation(fields: [teamId], references: [id])
+  teamName        String // Storing snapshot of team name as requested
+
+  csv              String 
+  githubLink       String 
+
+  calculatedScore Float
+  createdAt       DateTime @default(now())
+}

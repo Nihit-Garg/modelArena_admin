@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Model Arena - Admin Portal</title>
+</head>
+
+<body>
+    <h1>Model Arena - Admin Dashboard</h1>
+    <p>Total Submissions: <span id="total-count">Loading...</span></p>
+    <button onclick="loadSubmissions()">Refresh Data</button>
+
+    <table border="1" cellpadding="10" cellspacing="0">
+        <thead>
+            <tr>
+                <th>Rank</th>
+                <th>Team Name</th>
+                <th>Team Leader Email</th>
+                <th>GitHub Link</th>
+                <th>CSV Link</th>
+                <th>Score</th>
+                <th>Submitted At</th>
+            </tr>
+        </thead>
+        <tbody id="submissions-table">
+            <tr>
+                <td colspan="7">Loading submissions...</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <script>
+        async function loadSubmissions() {
+            try {
+                const response = await fetch('/api/submissions');
+                const result = await response.json();
+
+                if (!result.success) {
+                    throw new Error(result.error || 'Failed to fetch submissions');
+                }
+
+                const submissions = result.data;
+                const tableBody = document.getElementById('submissions-table');
+                const totalCount = document.getElementById('total-count');
+
+                // Update total count
+                totalCount.textContent = result.total;
+
+                // Clear existing rows
+                tableBody.innerHTML = '';
+
+                if (submissions.length === 0) {
+                    tableBody.innerHTML = '<tr><td colspan="7">No submissions found</td></tr>';
+                    return;
+                }
+
+                // Populate table with submissions
+                submissions.forEach((submission, index) => {
+                    const row = document.createElement('tr');
+
+                    const submittedDate = new Date(submission.submittedAt).toLocaleString();
+
+                    row.innerHTML = `
+                        <td>${index + 1}</td>
+                        <td>${submission.teamName}</td>
+                        <td>${submission.leaderEmail}</td>
+                        <td><a href="${submission.githubLink}" target="_blank">View GitHub</a></td>
+                        <td><a href="${submission.csvLink}" target="_blank">Download CSV</a></td>
+                        <td>${submission.score.toFixed(4)}</td>
+                        <td>${submittedDate}</td>
+                    `;
+
+                    tableBody.appendChild(row);
+                });
+            } catch (error) {
+                console.error('Error loading submissions:', error);
+                document.getElementById('submissions-table').innerHTML =
+                    '<tr><td colspan="7">Error loading submissions: ' + error.message + '</td></tr>';
+            }
+        }
+
+        // Load submissions on page load
+        loadSubmissions();
+
+        // Auto-refresh every 30 seconds
+        setInterval(loadSubmissions, 30000);
+    </script>
+</body>
+
+</html>
