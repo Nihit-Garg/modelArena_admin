@@ -1,0 +1,8 @@
+node_modules/
+.pnpm-store/
+.env
+/prisma/migrations/
+uploads/
+.DS_Store
+.vscode/
+src/data/
